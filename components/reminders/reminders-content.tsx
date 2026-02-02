@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, Bell, BellOff, Trash2, Clock } from 'lucide-react'
+import { Plus, Bell, BellOff, Trash2, Clock, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -45,8 +45,8 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
   const activeCount = recordatorios.filter(r => r.activo).length
   const now = new Date()
 
-  const upcomingReminders = recordatorios.filter(r => new Date(r.fecha_hora) >= now)
-  const pastReminders = recordatorios.filter(r => new Date(r.fecha_hora) < now)
+  const upcomingReminders = recordatorios.filter(r => new Date(r.fecha_hora) >= now).sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime())
+  const pastReminders = recordatorios.filter(r => new Date(r.fecha_hora) < now).sort((a, b) => new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime())
 
   const handleAddReminder = async (formData: FormData) => {
     setLoading(true)
@@ -94,20 +94,12 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
     }
   }
 
-  const getTipoColor = (tipo: string) => {
-    switch (tipo) {
-      case 'tarea': return 'bg-accent/20 text-accent'
-      case 'clase': return 'bg-primary/20 text-primary'
-      default: return 'bg-warning/20 text-warning'
-    }
-  }
-
   return (
     <main className="px-4 py-6 max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Recordatorios</h1>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Recordatorios</h1>
           <p className="text-muted-foreground text-sm">
             {activeCount} activo{activeCount !== 1 ? 's' : ''}
           </p>
@@ -123,41 +115,23 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
             <DialogHeader>
               <DialogTitle>Nuevo Recordatorio</DialogTitle>
             </DialogHeader>
-            <form action={handleAddReminder} className="space-y-4">
+            <form action={handleAddReminder} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="titulo">Titulo</Label>
-                <Input 
-                  id="titulo" 
-                  name="titulo" 
-                  placeholder="Ej: Estudiar para examen" 
-                  required 
-                />
+                <Label htmlFor="titulo">Título</Label>
+                <Input id="titulo" name="titulo" placeholder="Ej: Estudiar para examen" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="descripcion">Descripcion (opcional)</Label>
-                <Textarea 
-                  id="descripcion" 
-                  name="descripcion" 
-                  placeholder="Detalles adicionales..." 
-                  rows={2}
-                />
+                <Label htmlFor="descripcion">Descripción (opcional)</Label>
+                <Textarea id="descripcion" name="descripcion" placeholder="Detalles adicionales..." rows={2} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fecha_hora">Fecha y hora</Label>
-                <Input 
-                  id="fecha_hora" 
-                  name="fecha_hora" 
-                  type="datetime-local" 
-                  required 
-                  min={new Date().toISOString().slice(0, 16)}
-                />
+                <Input id="fecha_hora" name="fecha_hora" type="datetime-local" required min={new Date().toISOString().slice(0, 16)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo</Label>
                 <Select name="tipo" defaultValue="manual">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="manual">Manual</SelectItem>
                     <SelectItem value="tarea">Tarea</SelectItem>
@@ -173,55 +147,51 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
         </Dialog>
       </div>
 
-      {/* Upcoming Reminders */}
-      <div className="space-y-3 mb-6">
-        <h2 className="text-sm font-medium text-muted-foreground">Proximos</h2>
-        
-        {upcomingReminders.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Bell className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">No tienes recordatorios proximos</p>
-              <Button 
-                variant="link" 
-                className="mt-2"
-                onClick={() => setShowAddReminder(true)}
-              >
-                Crear un recordatorio
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          upcomingReminders.map((recordatorio) => (
-            <ReminderCard
-              key={recordatorio.id}
-              recordatorio={recordatorio}
-              onToggle={() => handleToggle(recordatorio)}
-              onDelete={() => setDeleteTarget(recordatorio)}
-              isPending={isPending}
-              getTipoLabel={getTipoLabel}
-              getTipoColor={getTipoColor}
-            />
-          ))
-        )}
-      </div>
+      {/* Reminders List */}
+      {recordatorios.length === 0 ? (
+        <div className="text-center py-20 px-4 rounded-lg bg-muted/30 border-2 border-dashed border-border">
+          <Bell className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-semibold text-foreground">Sin recordatorios</h3>
+          <p className="text-muted-foreground mb-4">Parece que no has creado ningún recordatorio aún.</p>
+          <Button variant="outline" onClick={() => setShowAddReminder(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Crear un recordatorio
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {upcomingReminders.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" />Próximos</h2>
+              {upcomingReminders.map((recordatorio) => (
+                <ReminderCard
+                  key={recordatorio.id}
+                  recordatorio={recordatorio}
+                  onToggle={() => handleToggle(recordatorio)}
+                  onDelete={() => setDeleteTarget(recordatorio)}
+                  isPending={isPending}
+                  getTipoLabel={getTipoLabel}
+                />
+              ))}
+            </section>
+          )}
 
-      {/* Past Reminders */}
-      {pastReminders.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Pasados</h2>
-          {pastReminders.map((recordatorio) => (
-            <ReminderCard
-              key={recordatorio.id}
-              recordatorio={recordatorio}
-              onToggle={() => handleToggle(recordatorio)}
-              onDelete={() => setDeleteTarget(recordatorio)}
-              isPending={isPending}
-              getTipoLabel={getTipoLabel}
-              getTipoColor={getTipoColor}
-              isPast
-            />
-          ))}
+          {pastReminders.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4" />Pasados</h2>
+              {pastReminders.map((recordatorio) => (
+                <ReminderCard
+                  key={recordatorio.id}
+                  recordatorio={recordatorio}
+                  onToggle={() => handleToggle(recordatorio)}
+                  onDelete={() => setDeleteTarget(recordatorio)}
+                  isPending={isPending}
+                  getTipoLabel={getTipoLabel}
+                  isPast
+                />
+              ))}
+            </section>
+          )}
         </div>
       )}
 
@@ -231,7 +201,7 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar recordatorio</AlertDialogTitle>
             <AlertDialogDescription>
-              Estas seguro de eliminar "{deleteTarget?.titulo}"? Esta accion no se puede deshacer.
+              ¿Estás seguro de eliminar "{deleteTarget?.titulo}"? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -252,7 +222,6 @@ interface ReminderCardProps {
   onDelete: () => void
   isPending: boolean
   getTipoLabel: (tipo: string) => string
-  getTipoColor: (tipo: string) => string
   isPast?: boolean
 }
 
@@ -262,62 +231,56 @@ function ReminderCard({
   onDelete, 
   isPending,
   getTipoLabel,
-  getTipoColor,
   isPast 
 }: ReminderCardProps) {
+
+  const getTipoColor = (tipo: string) => {
+    switch (tipo) {
+      case 'tarea': return 'border-accent-foreground/50'
+      case 'clase': return 'border-primary/50'
+      default: return 'border-warning/50'
+    }
+  }
+
   return (
-    <Card className={isPast ? 'opacity-60' : ''}>
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-            recordatorio.activo ? 'bg-warning/20' : 'bg-muted'
-          }`}>
-            {recordatorio.activo ? (
-              <Bell className="w-5 h-5 text-warning" />
-            ) : (
-              <BellOff className="w-5 h-5 text-muted-foreground" />
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-foreground truncate">
-                {recordatorio.titulo}
-              </p>
-              <Badge className={`text-xs ${getTipoColor(recordatorio.tipo)}`}>
-                {getTipoLabel(recordatorio.tipo)}
-              </Badge>
-            </div>
-            
-            {recordatorio.descripcion && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {recordatorio.descripcion}
-              </p>
-            )}
-            
-            <p className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-              <Clock className="w-3 h-3" />
-              {formatDateTime(recordatorio.fecha_hora)}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Switch
-              checked={recordatorio.activo}
-              onCheckedChange={onToggle}
-              disabled={isPending}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+    <div className={cn(
+      "p-4 rounded-lg border flex items-start gap-4",
+      isPast ? 'bg-muted/30 opacity-70' : 'bg-muted/50',
+      getTipoColor(recordatorio.tipo)
+    )}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-foreground truncate">
+            {recordatorio.titulo}
+          </p>
+          <Switch
+            checked={recordatorio.activo}
+            onCheckedChange={onToggle}
+            disabled={isPending}
+          />
         </div>
-      </CardContent>
-    </Card>
+        
+        {recordatorio.descripcion && (
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            {recordatorio.descripcion}
+          </p>
+        )}
+        
+        <div className="flex items-center justify-between mt-3">
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="w-3 h-3" />
+            {formatDateTime(recordatorio.fecha_hora)}
+          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive w-7 h-7"
+            onClick={onDelete}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

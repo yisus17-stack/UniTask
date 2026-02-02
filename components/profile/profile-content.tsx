@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, Mail, GraduationCap, BookOpen, Bell, LogOut, Save, Loader2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -66,109 +65,96 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
   return (
     <main className="px-4 py-6 max-w-lg mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Perfil</h1>
-        <p className="text-muted-foreground text-sm">Configura tu cuenta</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Perfil</h1>
+        <p className="text-muted-foreground">Gestiona la información de tu cuenta.</p>
       </div>
 
       {/* Avatar Section */}
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
           <User className="w-10 h-10 text-primary" />
         </div>
-        <p className="font-semibold text-foreground">{formData.nombre || 'Estudiante'}</p>
-        <p className="text-sm text-muted-foreground">{email}</p>
+        <div>
+          <p className="text-xl font-semibold text-foreground">{formData.nombre || 'Estudiante'}</p>
+          <p className="text-sm text-muted-foreground">{email}</p>
+        </div>
       </div>
 
-      {/* Profile Form */}
-      <Card className="mb-4">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-2">
-            <User className="w-4 h-4 text-primary" />
-            Informacion Personal
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre completo</Label>
-            <Input
-              id="nombre"
-              value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              placeholder="Tu nombre"
-              className="h-11"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Correo electronico</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="space-y-8">
+        {/* Profile Form */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="w-5 h-5" /> Información Personal</h2>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nombre">Nombre completo</Label>
               <Input
-                id="email"
-                value={email}
-                disabled
-                className="h-11 pl-10 bg-muted"
+                id="nombre"
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                placeholder="Tu nombre"
+                className="h-11 bg-muted/50"
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Academic Info */}
-      <Card className="mb-4">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-primary" />
-            Informacion Academica
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="carrera">Carrera</Label>
-            <div className="relative">
-              <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="carrera"
-                value={formData.carrera}
-                onChange={(e) => setFormData({ ...formData, carrera: e.target.value })}
-                placeholder="Ingenieria en Sistemas"
-                className="h-11 pl-10"
-              />
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Correo electrónico</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  value={email}
+                  disabled
+                  className="h-11 pl-10 bg-muted/30"
+                />
+              </div>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="semestre">Semestre</Label>
-            <Select
-              value={formData.semestre}
-              onValueChange={(value) => setFormData({ ...formData, semestre: value })}
-            >
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Selecciona tu semestre" />
-              </SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((sem) => (
-                  <SelectItem key={sem} value={sem.toString()}>
-                    {sem}° Semestre
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Notifications */}
-      <Card className="mb-6">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Bell className="w-4 h-4 text-primary" />
-            Notificaciones
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
+        {/* Academic Info */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5" /> Información Académica</h2>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="carrera">Carrera</Label>
+              <div className="relative">
+                <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="carrera"
+                  value={formData.carrera}
+                  onChange={(e) => setFormData({ ...formData, carrera: e.target.value })}
+                  placeholder="Ingeniería en Sistemas"
+                  className="h-11 pl-10 bg-muted/50"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="semestre">Semestre</Label>
+              <Select
+                value={formData.semestre}
+                onValueChange={(value) => setFormData({ ...formData, semestre: value })}
+              >
+                <SelectTrigger className="h-11 bg-muted/50">
+                  <SelectValue placeholder="Selecciona tu semestre" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((sem) => (
+                    <SelectItem key={sem} value={sem.toString()}>
+                      {sem}° Semestre
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </section>
+
+        {/* Notifications */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Bell className="w-5 h-5" /> Notificaciones</h2>
+          <div className="bg-muted/50 rounded-lg p-4 flex items-center justify-between">
             <div>
               <p className="font-medium text-foreground">Activar notificaciones</p>
               <p className="text-sm text-muted-foreground">Recibe alertas de tareas y recordatorios</p>
@@ -178,11 +164,11 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
               onCheckedChange={(checked) => setFormData({ ...formData, notificaciones_activas: checked })}
             />
           </div>
-        </CardContent>
-      </Card>
+        </section>
+      </div>
 
       {/* Actions */}
-      <div className="space-y-3">
+      <div className="space-y-3 mt-10">
         <Button 
           onClick={handleSave} 
           className="w-full h-12"
@@ -204,10 +190,10 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
         <Button 
           variant="outline" 
           onClick={() => setShowLogoutConfirm(true)}
-          className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/10 bg-transparent"
+          className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
         >
           <LogOut className="w-4 h-4 mr-2" />
-          Cerrar Sesion
+          Cerrar Sesión
         </Button>
       </div>
 
@@ -215,15 +201,15 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cerrar sesion</AlertDialogTitle>
+            <AlertDialogTitle>Cerrar sesión</AlertDialogTitle>
             <AlertDialogDescription>
-              Estas seguro de que quieres cerrar tu sesion?
+              ¿Estás seguro de que quieres cerrar tu sesión?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Cerrar Sesion
+              Cerrar Sesión
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

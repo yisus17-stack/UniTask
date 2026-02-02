@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Clock, MapPin, User, Trash2 } from 'lucide-react'
+import { Plus, Clock, MapPin, User, Trash2, Book } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,7 @@ import type { Horario, Materia } from '@/lib/types'
 import { DIAS_SEMANA, DIAS_SEMANA_CORTO, COLORES_MATERIA } from '@/lib/types'
 import { createHorario, deleteHorario, createMateria, deleteMateria } from '@/app/actions/data'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface ScheduleContentProps {
   horarios: Horario[]
@@ -96,10 +97,92 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Horario</h1>
-          <p className="text-muted-foreground text-sm">Tu semana academica</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Horario</h1>
+          <p className="text-muted-foreground">Tu semana académica</p>
         </div>
-        <div className="flex gap-2">
+        <Dialog open={showAddClass} onOpenChange={setShowAddClass}>
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <Plus className="w-4 h-4 mr-1" />
+              Clase
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nueva Clase - {DIAS_SEMANA[selectedDay]}</DialogTitle>
+            </DialogHeader>
+            <form action={handleAddClass} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="materia_id">Materia</Label>
+                <Select name="materia_id" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una materia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {materias.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: m.color }} />
+                          {m.nombre}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 {materias.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Primero debes crear materias en la sección de "Tus Materias".
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="hora_inicio">Hora inicio</Label>
+                  <Input id="hora_inicio" name="hora_inicio" type="time" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hora_fin">Hora fin</Label>
+                  <Input id="hora_fin" name="hora_fin" type="time" required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="aula">Aula (opcional)</Label>
+                <Input id="aula" name="aula" placeholder="A-101" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="docente">Docente (opcional)</Label>
+                <Input id="docente" name="docente" placeholder="Prof. García" />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || materias.length === 0}>
+                {materias.length === 0 ? 'Crea una materia primero' : 'Agregar Clase'}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Day Selector */}
+      <div className="flex justify-between gap-1 mb-8 p-1 rounded-full bg-muted">
+        {DIAS_SEMANA_CORTO.map((dia, index) => (
+          <button
+            key={index}
+            onClick={() => setSelectedDay(index)}
+            className={cn(
+              "flex-1 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors",
+              selectedDay === index
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-background/50'
+            )}
+          >
+            {dia}
+          </button>
+        ))}
+      </div>
+
+      {/* Materias Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2"><Book className="w-5 h-5 text-muted-foreground"/> Tus Materias</h2>
           <Dialog open={showAddMateria} onOpenChange={setShowAddMateria}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="bg-transparent">
@@ -111,10 +194,10 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
               <DialogHeader>
                 <DialogTitle>Nueva Materia</DialogTitle>
               </DialogHeader>
-              <form action={handleAddMateria} className="space-y-4">
+              <form action={handleAddMateria} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="materia-nombre">Nombre</Label>
-                  <Input id="materia-nombre" name="nombre" placeholder="Calculo I" required />
+                  <Input id="materia-nombre" name="nombre" placeholder="Cálculo I" required />
                 </div>
                 <div className="space-y-2">
                   <Label>Color</Label>
@@ -123,7 +206,7 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
                       <label key={color} className="cursor-pointer">
                         <input type="radio" name="color" value={color} className="sr-only peer" defaultChecked={color === COLORES_MATERIA[0]} />
                         <div 
-                          className="w-8 h-8 rounded-full peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary"
+                          className="w-8 h-8 rounded-full transition-all peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary peer-checked:ring-offset-background"
                           style={{ backgroundColor: color }}
                         />
                       </label>
@@ -136,171 +219,87 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
               </form>
             </DialogContent>
           </Dialog>
-          
-          <Dialog open={showAddClass} onOpenChange={setShowAddClass}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-1" />
-                Clase
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nueva Clase - {DIAS_SEMANA[selectedDay]}</DialogTitle>
-              </DialogHeader>
-              <form action={handleAddClass} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="materia_id">Materia</Label>
-                  <Select name="materia_id">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una materia" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {materias.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: m.color }} />
-                            {m.nombre}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="hora_inicio">Hora inicio</Label>
-                    <Input id="hora_inicio" name="hora_inicio" type="time" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="hora_fin">Hora fin</Label>
-                    <Input id="hora_fin" name="hora_fin" type="time" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="aula">Aula (opcional)</Label>
-                  <Input id="aula" name="aula" placeholder="A-101" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="docente">Docente (opcional)</Label>
-                  <Input id="docente" name="docente" placeholder="Prof. Garcia" />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading || materias.length === 0}>
-                  {materias.length === 0 ? 'Primero crea una materia' : 'Agregar Clase'}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
-      </div>
-
-      {/* Day Selector */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {DIAS_SEMANA_CORTO.map((dia, index) => (
-          <button
-            key={index}
-            onClick={() => setSelectedDay(index)}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              selectedDay === index
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            {dia}
-          </button>
-        ))}
-      </div>
-
-      {/* Materias Section */}
-      {materias.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">Tus Materias</h2>
+        
+        {materias.length > 0 ? (
           <div className="flex gap-2 flex-wrap">
             {materias.map((materia) => (
               <Badge
                 key={materia.id}
-                variant="secondary"
-                className="gap-2 pr-1 cursor-pointer hover:bg-secondary/80"
+                variant="outline"
+                className="gap-2 p-2 cursor-pointer hover:border-destructive/50 group"
                 onClick={() => setDeleteTarget({ type: 'materia', id: materia.id, name: materia.nombre })}
               >
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: materia.color }} />
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: materia.color }} />
                 {materia.nombre}
-                <Trash2 className="w-3 h-3 ml-1 text-muted-foreground" />
+                <Trash2 className="w-3 h-3 text-muted-foreground group-hover:text-destructive transition-colors" />
               </Badge>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-muted-foreground">Aún no has creado materias.</p>
+        )}
+      </div>
 
       {/* Schedule List */}
       <div className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          {DIAS_SEMANA[selectedDay]} - {horariosDelDia.length} clase{horariosDelDia.length !== 1 ? 's' : ''}
+        <h2 className="text-lg font-semibold">
+          {DIAS_SEMANA[selectedDay]}
         </h2>
         
         {horariosDelDia.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Clock className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">No tienes clases este dia</p>
-              <Button 
-                variant="link" 
-                className="mt-2"
-                onClick={() => setShowAddClass(true)}
-              >
-                Agregar una clase
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="text-center py-16 px-4 rounded-lg bg-muted/30 border-2 border-dashed border-border">
+            <Clock className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No tienes clases este día.</p>
+            <Button 
+              variant="link" 
+              className="mt-2"
+              onClick={() => setShowAddClass(true)}
+            >
+              Agregar una clase
+            </Button>
+          </div>
         ) : (
           horariosDelDia.map((horario) => (
-            <Card key={horario.id} className="overflow-hidden">
-              <div className="flex">
-                <div 
-                  className="w-1.5"
-                  style={{ backgroundColor: horario.materia?.color || '#3B82F6' }}
-                />
-                <CardContent className="flex-1 p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-foreground">
-                        {horario.materia?.nombre || 'Clase'}
-                      </h3>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {horario.hora_inicio.slice(0, 5)} - {horario.hora_fin.slice(0, 5)}
-                        </span>
-                        {horario.aula && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {horario.aula}
-                          </span>
-                        )}
-                      </div>
-                      {horario.docente && (
-                        <p className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                          <User className="w-4 h-4" />
-                          {horario.docente}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => setDeleteTarget({ 
-                        type: 'horario', 
-                        id: horario.id, 
-                        name: horario.materia?.nombre || 'esta clase' 
-                      })}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+            <div key={horario.id} className="bg-muted/50 rounded-lg p-4 border-l-4" style={{ borderColor: horario.materia?.color || '#A78BFA' }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg">
+                    {horario.materia?.nombre || 'Clase'}
+                  </h3>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4" />
+                      {horario.hora_inicio.slice(0, 5)} - {horario.hora_fin.slice(0, 5)}
+                    </span>
+                    {horario.aula && (
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4" />
+                        {horario.aula}
+                      </span>
+                    )}
                   </div>
-                </CardContent>
+                  {horario.docente && (
+                    <p className="flex items-center gap-1.5 mt-1.5 text-sm text-muted-foreground">
+                      <User className="w-4 h-4" />
+                      {horario.docente}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive h-8 w-8"
+                  onClick={() => setDeleteTarget({ 
+                    type: 'horario', 
+                    id: horario.id, 
+                    name: horario.materia?.nombre || 'esta clase' 
+                  })}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-            </Card>
+            </div>
           ))
         )}
       </div>
@@ -311,8 +310,8 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar {deleteTarget?.type === 'horario' ? 'clase' : 'materia'}</AlertDialogTitle>
             <AlertDialogDescription>
-              Estas seguro de eliminar {deleteTarget?.name}? 
-              {deleteTarget?.type === 'materia' && ' Esto tambien eliminara todas las clases asociadas.'}
+              ¿Estás seguro de eliminar {deleteTarget?.name}? 
+              {deleteTarget?.type === 'materia' && ' Esto también eliminará todas las clases y tareas asociadas.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

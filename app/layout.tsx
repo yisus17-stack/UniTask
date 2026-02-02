@@ -6,8 +6,15 @@ import { Toaster } from '@/components/ui/sonner'
 import { PWARegister } from '@/components/pwa-register'
 import './globals.css'
 
-const _inter = Inter({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: '--font-sans'
+});
+
+const geistMono = Geist_Mono({ 
+  subsets: ["latin"],
+  variable: '--font-mono'
+});
 
 export const metadata: Metadata = {
   title: 'Unitask',
@@ -37,8 +44,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f5ff' },
-    { media: '(prefers-color-scheme: dark)', color: '#1a1a2e' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
   ],
 }
 
@@ -48,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" className={`dark ${inter.variable} ${geistMono.variable}`}>
       <body className="font-sans antialiased min-h-screen">
         {children}
         <Toaster position="top-center" richColors />
