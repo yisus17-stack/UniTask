@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Clock, MapPin, User, Trash2, Book, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -41,21 +41,28 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
   const [showDeleteMateria, setShowDeleteMateria] = useState<Materia | null>(null)
   const [selectedHorario, setSelectedHorario] = useState<Horario | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentDate, setCurrentDate] = useState(new Date())
-
-  const today = new Date()
-  today.setHours(0,0,0,0)
   
-  const weekStart = new Date(currentDate)
-  const dayOffset = currentDate.getDay() === 0 ? -6 : 1 - currentDate.getDay()
-  weekStart.setDate(currentDate.getDate() + dayOffset)
-  weekStart.setHours(0,0,0,0)
+  const [clientDates, setClientDates] = useState<{ today: Date; weekDays: Date[] } | null>(null)
 
-  const weekDays = Array.from({ length: 6 }).map((_, i) => {
-    const day = new Date(weekStart)
-    day.setDate(weekStart.getDate() + i)
-    return day
-  })
+  useEffect(() => {
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const weekStart = new Date(now);
+    const dayOffset = now.getDay() === 0 ? -6 : 1 - now.getDay();
+    weekStart.setDate(now.getDate() + dayOffset);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekDays = Array.from({ length: 6 }).map((_, i) => {
+        const day = new Date(weekStart);
+        day.setDate(weekStart.getDate() + i);
+        return day;
+    });
+    
+    setClientDates({ today, weekDays });
+  }, [])
+
 
   const handleAddClass = async (formData: FormData) => {
     setLoading(true)
@@ -110,6 +117,12 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
   }
   
   const totalRows = (END_HOUR - START_HOUR) * 2;
+
+  const ScheduleSkeleton = () => (
+    <div className="flex-1 min-h-0 border-t border-border flex items-center justify-center">
+      <p className="text-muted-foreground">Cargando horario...</p>
+    </div>
+  )
 
   return (
     <main className="flex flex-col h-[calc(100vh-80px)]">
@@ -249,91 +262,93 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
         </div>
       </div>
       
-      <div className="flex-1 min-h-0 border-t border-border overflow-hidden">
-        <div 
-          className="grid h-full"
-          style={{ gridTemplateColumns: '4rem 1fr' }}
-        >
-          <div className="h-full border-r relative">
-            <div className="sticky top-0 bg-card z-20 h-16 border-b"></div>
-            {Array.from({ length: END_HOUR - START_HOUR }).map((_, hourIndex) => {
-              const hour = START_HOUR + hourIndex;
-              return (
-                <div key={hour} className="relative h-24 text-right pr-2">
-                  <p className="absolute -top-2.5 right-2 text-xs text-muted-foreground">{`${hour}:00`}</p>
-                </div>
-              )
-            })}
-          </div>
+      {!clientDates ? <ScheduleSkeleton /> : (
+        <div className="flex-1 min-h-0 border-t border-border overflow-hidden">
+          <div 
+            className="grid h-full"
+            style={{ gridTemplateColumns: '4rem 1fr' }}
+          >
+            <div className="h-full border-r relative">
+              <div className="sticky top-0 bg-card z-20 h-16 border-b"></div>
+              {Array.from({ length: END_HOUR - START_HOUR }).map((_, hourIndex) => {
+                const hour = START_HOUR + hourIndex;
+                return (
+                  <div key={hour} className="relative h-24 text-right pr-2">
+                    <p className="absolute -top-2.5 right-2 text-xs text-muted-foreground">{`${hour}:00`}</p>
+                  </div>
+                )
+              })}
+            </div>
 
-          <div className="overflow-x-auto">
-            <div 
-              className="grid min-w-[750px]"
-              style={{ 
-                gridTemplateColumns: 'repeat(6, 1fr)',
-              }}
-            >
-              {/* Day Headers */}
-              <div className="col-span-6 grid grid-cols-6 sticky top-0 bg-card z-20 border-b">
-                {weekDays.map((day) => {
-                  const isToday = day.getTime() === today.getTime()
-                  return (
-                    <div key={day.toISOString()} className="text-center p-3 border-r last:border-r-0">
-                      <p className="font-medium text-muted-foreground text-sm">{DIAS_SEMANA_CORTO[day.getDay()]}</p>
-                      <p className={cn("text-2xl font-bold", isToday ? "text-primary" : "text-foreground")}>
-                        {day.getDate()}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-
+            <div className="overflow-x-auto">
               <div 
-                className="col-span-6 grid relative"
-                style={{
+                className="grid min-w-[750px]"
+                style={{ 
                   gridTemplateColumns: 'repeat(6, 1fr)',
-                  gridTemplateRows: `repeat(${totalRows}, 2rem)`
                 }}
               >
-                {/* Grid Lines */}
-                {Array.from({ length: 6 * totalRows }).map((_, i) => (
-                  <div key={i} className="border-b border-r border-border/50"></div>
-                ))}
-                
-                {/* Events */}
-                {horarios.map(horario => {
-                  if (!horario.hora_inicio || !horario.hora_fin || horario.dia_semana < 1 || horario.dia_semana > 6) return null;
+                {/* Day Headers */}
+                <div className="col-span-6 grid grid-cols-6 sticky top-0 bg-card z-20 border-b">
+                  {clientDates.weekDays.map((day) => {
+                    const isToday = day.getTime() === clientDates.today.getTime()
+                    return (
+                      <div key={day.toISOString()} className="text-center p-3 border-r last:border-r-0">
+                        <p className="font-medium text-muted-foreground text-sm">{DIAS_SEMANA_CORTO[day.getDay()]}</p>
+                        <p className={cn("text-2xl font-bold", isToday ? "text-primary" : "text-foreground")}>
+                          {day.getDate()}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div 
+                  className="col-span-6 grid relative"
+                  style={{
+                    gridTemplateColumns: 'repeat(6, 1fr)',
+                    gridTemplateRows: `repeat(${totalRows}, 2rem)`
+                  }}
+                >
+                  {/* Grid Lines */}
+                  {Array.from({ length: 6 * totalRows }).map((_, i) => (
+                    <div key={i} className="border-b border-r border-border/50"></div>
+                  ))}
                   
-                  const start = timeToMinutes(horario.hora_inicio);
-                  const end = timeToMinutes(horario.hora_fin);
+                  {/* Events */}
+                  {horarios.map(horario => {
+                    if (!horario.hora_inicio || !horario.hora_fin || horario.dia_semana < 1 || horario.dia_semana > 6) return null;
+                    
+                    const start = timeToMinutes(horario.hora_inicio);
+                    const end = timeToMinutes(horario.hora_fin);
 
-                  const gridRowStart = (start - (START_HOUR * 60)) / 30 + 1;
-                  const gridRowEnd = (end - (START_HOUR * 60)) / 30 + 1;
+                    const gridRowStart = (start - (START_HOUR * 60)) / 30 + 1;
+                    const gridRowEnd = (end - (START_HOUR * 60)) / 30 + 1;
 
-                  if (gridRowStart < 1 || gridRowEnd > totalRows + 1) return null;
+                    if (gridRowStart < 1 || gridRowEnd > totalRows + 1) return null;
 
-                  return (
-                    <div
-                      key={horario.id}
-                      onClick={() => setSelectedHorario(horario)}
-                      className="relative flex flex-col p-2 rounded-lg m-px overflow-hidden group shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-200"
-                      style={{
-                        gridColumn: horario.dia_semana,
-                        gridRow: `${Math.floor(gridRowStart)} / ${Math.floor(gridRowEnd)}`,
-                        backgroundColor: `${horario.materia?.color}20`,
-                        borderLeft: `3px solid ${horario.materia?.color}`,
-                      }}
-                    >
-                      <p className="font-semibold text-sm" style={{ color: horario.materia?.color }}>{horario.materia?.nombre}</p>
-                      <p className="text-xs text-muted-foreground">{`${horario.hora_inicio.slice(0,5)} - ${horario.hora_fin.slice(0,5)}`}</p>
-                    </div>
-                  )
-                })}
+                    return (
+                      <div
+                        key={horario.id}
+                        onClick={() => setSelectedHorario(horario)}
+                        className="relative flex flex-col p-2 rounded-lg m-px overflow-hidden group shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-200"
+                        style={{
+                          gridColumn: horario.dia_semana,
+                          gridRow: `${Math.floor(gridRowStart)} / ${Math.floor(gridRowEnd)}`,
+                          backgroundColor: `${horario.materia?.color}20`,
+                          borderLeft: `3px solid ${horario.materia?.color}`,
+                        }}
+                      >
+                        <p className="font-semibold text-sm" style={{ color: horario.materia?.color }}>{horario.materia?.nombre}</p>
+                        <p className="text-xs text-muted-foreground">{`${horario.hora_inicio.slice(0,5)} - ${horario.hora_fin.slice(0,5)}`}</p>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       
       {/* Class Detail Dialog */}
       <Dialog open={!!selectedHorario} onOpenChange={() => setSelectedHorario(null)}>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Plus, Bell, BellOff, Trash2, Clock, Calendar } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -43,11 +43,20 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
   const [isPending, startTransition] = useTransition()
   const [loading, setLoading] = useState(false)
 
-  const activeCount = recordatorios.filter(r => r.activo).length
-  const now = new Date()
+  const [reminderLists, setReminderLists] = useState<{ upcoming: Recordatorio[]; past: Recordatorio[] } | null>(null)
 
-  const upcomingReminders = recordatorios.filter(r => new Date(r.fecha_hora) >= now).sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime())
-  const pastReminders = recordatorios.filter(r => new Date(r.fecha_hora) < now).sort((a, b) => new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime())
+  useEffect(() => {
+    const now = new Date();
+    const upcoming = recordatorios
+      .filter(r => new Date(r.fecha_hora) >= now)
+      .sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime());
+    const past = recordatorios
+      .filter(r => new Date(r.fecha_hora) < now)
+      .sort((a, b) => new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime());
+    setReminderLists({ upcoming, past });
+  }, [recordatorios]);
+
+  const activeCount = recordatorios.filter(r => r.activo).length
 
   const handleAddReminder = async (formData: FormData) => {
     setLoading(true)
@@ -149,7 +158,11 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
       </div>
 
       {/* Reminders List */}
-      {recordatorios.length === 0 ? (
+      {!reminderLists ? (
+        <div className="text-center py-20">
+          <p className="text-muted-foreground">Cargando recordatorios...</p>
+        </div>
+      ) : recordatorios.length === 0 ? (
         <div className="text-center py-20 px-4 rounded-lg bg-muted/30 border-2 border-dashed border-border">
           <Bell className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-semibold text-foreground">Sin recordatorios</h3>
@@ -161,10 +174,10 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
         </div>
       ) : (
         <div className="space-y-6">
-          {upcomingReminders.length > 0 && (
+          {reminderLists.upcoming.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2"><Calendar className="w-4 h-4" />Próximos</h2>
-              {upcomingReminders.map((recordatorio) => (
+              {reminderLists.upcoming.map((recordatorio) => (
                 <ReminderCard
                   key={recordatorio.id}
                   recordatorio={recordatorio}
@@ -177,10 +190,10 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
             </section>
           )}
 
-          {pastReminders.length > 0 && (
+          {reminderLists.past.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4" />Pasados</h2>
-              {pastReminders.map((recordatorio) => (
+              {reminderLists.past.map((recordatorio) => (
                 <ReminderCard
                   key={recordatorio.id}
                   recordatorio={recordatorio}

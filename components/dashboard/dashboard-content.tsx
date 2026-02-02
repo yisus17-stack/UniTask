@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Calendar, CheckSquare, Bell, Clock, BookOpen, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,14 +27,22 @@ export function DashboardContent({
   totalTareasPendientes,
   totalRecordatoriosActivos,
 }: DashboardContentProps) {
-  const today = new Date()
-  const dayName = DIAS_SEMANA[today.getDay()]
+  const [dayInfo, setDayInfo] = useState<{ name: string; date: string } | null>(null);
+
+  useEffect(() => {
+    const today = new Date();
+    const dayName = DIAS_SEMANA[today.getDay()];
+    const dateString = today.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+    setDayInfo({ name: dayName, date: dateString });
+  }, []);
 
   return (
     <main className="px-4 py-6">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-muted-foreground text-sm">{dayName}, {today.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</p>
+        <p className="text-muted-foreground text-sm">
+          {dayInfo ? `${dayInfo.name}, ${dayInfo.date}` : <span className="inline-block h-5 w-32 animate-pulse rounded-md bg-muted" />}
+        </p>
         <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Hola, {userName.split(' ')[0]}
         </h1>
