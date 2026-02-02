@@ -4,7 +4,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
   register: true,
   skipWaiting: true,
-  workbox_options: {
+  workboxOptions: {
     importScripts: ["/worker.js"],
   },
 });
