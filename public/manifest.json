@@ -2,10 +2,6 @@
   "name": "Unitask",
   "short_name": "Unitask",
   "description": "Tu asistente personal para organizar tu vida academica - horarios, tareas y recordatorios",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#F9FAFB",
-  "theme_color": "#3B82F6",
   "icons": [
     {
       "src": "/icons/icon-192x192.jpg",
@@ -19,5 +15,9 @@
       "type": "image/jpeg",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F9FAFB",
+  "theme_color": "#F9FAFB"
 }
