@@ -13,22 +13,19 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Unitask',
   description: 'Tu asistente personal para organizar tu vida academica - horarios, tareas y recordatorios',
-  generator: 'v0.app',
+  generator: 'Unitask',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Unitask',
   },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: [
-      { url: '/icons/icon-192x192.jpg', sizes: '192x192', type: 'image/jpeg' },
-      { url: '/icons/icon-512x512.jpg', sizes: '512x512', type: 'image/jpeg' },
-    ],
-    apple: [
-      { url: '/icons/icon-152x152.jpg', sizes: '152x152', type: 'image/jpeg' },
-      { url: '/icons/icon-192x192.jpg', sizes: '192x192', type: 'image/jpeg' },
-    ],
+    icon: '/icons/icon-192x192.png',
+    apple: '/icons/icon-192x192.png',
   },
 }
 
@@ -50,6 +47,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable}`}>
+      <head>
+        <meta name="application-name" content="Unitask" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Unitask" />
+      </head>
       <body className="font-sans antialiased min-h-screen">
         {children}
         <Toaster position="top-center" richColors />
