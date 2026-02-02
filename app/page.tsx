@@ -1,18 +1,15 @@
 'use client'
 
 import React from "react"
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { BookOpen, Calendar, CheckSquare, Bell, ArrowRight, Star } from 'lucide-react'
+import { BookOpen, Calendar, CheckSquare, Bell, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { PlaceHolderImages } from '@/lib/placeholder-images'
 
 export default function SplashPage() {
   const router = useRouter()
   const [checking, setChecking] = useState(true)
-  const heroImage = PlaceHolderImages.find(p => p.id === 'hero-dashboard');
 
   useEffect(() => {
     const supabase = createClient()
@@ -42,7 +39,7 @@ export default function SplashPage() {
   return (
     <main className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       {/* Hero Section */}
-      <section className="w-full flex-1 flex flex-col items-center justify-center text-center px-4 py-20 md:py-28 overflow-hidden">
+      <section className="w-full flex-1 flex flex-col items-center justify-center text-center px-4 py-20 md:py-28 lg:py-36">
         <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-primary flex items-center justify-center mb-6 shadow-2xl shadow-primary/20">
             <BookOpen className="w-8 h-8 text-primary-foreground" />
@@ -70,23 +67,6 @@ export default function SplashPage() {
             >
               Iniciar Sesión
             </Button>
-          </div>
-        </div>
-        <div className="relative mt-16 w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-12 duration-500 delay-100">
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-primary/10 rounded-full -z-10 blur-2xl"></div>
-          <div className="absolute -top-8 -right-8 w-32 h-32 bg-accent/10 rounded-full -z-10 blur-2xl"></div>
-          <div className="bg-card p-3 rounded-2xl shadow-2xl shadow-primary/10 ring-1 ring-border/20">
-            {heroImage && (
-              <Image
-                src={heroImage.imageUrl}
-                alt={heroImage.description}
-                width={1600}
-                height={900}
-                className="rounded-lg shadow-md aspect-[16/9] object-cover object-top"
-                data-ai-hint={heroImage.imageHint}
-                priority
-              />
-            )}
           </div>
         </div>
       </section>
