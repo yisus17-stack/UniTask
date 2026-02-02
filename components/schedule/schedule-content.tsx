@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Clock, MapPin, User, Trash2, Book } from 'lucide-react'
+import { Plus, Clock, MapPin, User, Trash2, Book, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog'
@@ -17,6 +17,7 @@ import { createHorario, deleteHorario, createMateria, deleteMateria } from '@/ap
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 interface ScheduleContentProps {
   horarios: Horario[]
@@ -28,6 +29,7 @@ const END_HOUR = 22;
 const DAYS_TO_SHOW = DIAS_SEMANA.slice(1, 7); // Mon to Sat
 
 const timeToMinutes = (time: string) => {
+  if (!time) return 0
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
 };
@@ -35,9 +37,25 @@ const timeToMinutes = (time: string) => {
 export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
   const [showAddClass, setShowAddClass] = useState(false)
   const [showAddMateria, setShowAddMateria] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{ type: 'horario' | 'materia', id: string, name: string } | null>(null)
+  const [showDeleteHorario, setShowDeleteHorario] = useState<Horario | null>(null)
+  const [showDeleteMateria, setShowDeleteMateria] = useState<Materia | null>(null)
+  const [selectedHorario, setSelectedHorario] = useState<Horario | null>(null)
   const [loading, setLoading] = useState(false)
-  const [selectedDayForModal, setSelectedDayForModal] = useState(new Date().getDay());
+  const [currentDate, setCurrentDate] = useState(new Date())
+
+  const today = new Date()
+  today.setHours(0,0,0,0)
+  
+  const weekStart = new Date(currentDate)
+  const dayOffset = currentDate.getDay() === 0 ? -6 : 1 - currentDate.getDay()
+  weekStart.setDate(currentDate.getDate() + dayOffset)
+  weekStart.setHours(0,0,0,0)
+
+  const weekDays = Array.from({ length: 6 }).map((_, i) => {
+    const day = new Date(weekStart)
+    day.setDate(weekStart.getDate() + i)
+    return day
+  })
 
   const handleAddClass = async (formData: FormData) => {
     setLoading(true)
@@ -64,36 +82,45 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
     }
   }
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return
+  const handleDeleteHorario = async () => {
+    if (!showDeleteHorario) return
     setLoading(true)
-    
-    const result = deleteTarget.type === 'horario' 
-      ? await deleteHorario(deleteTarget.id)
-      : await deleteMateria(deleteTarget.id)
-    
+    const result = await deleteHorario(showDeleteHorario.id)
     setLoading(false)
-    
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success(deleteTarget.type === 'horario' ? 'Clase eliminada' : 'Materia eliminada')
+      toast.success('Clase eliminada')
     }
-    setDeleteTarget(null)
+    setShowDeleteHorario(null)
+    setSelectedHorario(null)
+  }
+  
+  const handleDeleteMateria = async () => {
+    if (!showDeleteMateria) return
+    setLoading(true)
+    const result = await deleteMateria(showDeleteMateria.id)
+    setLoading(false)
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success('Materia eliminada')
+    }
+    setShowDeleteMateria(null)
   }
   
   const totalRows = (END_HOUR - START_HOUR) * 2;
 
   return (
-    <main className="px-4 py-6">
+    <main className="flex flex-col h-[calc(100vh-80px)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 px-4 pt-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Horario</h1>
           <p className="text-muted-foreground">Tu semana académica</p>
         </div>
         <div className="flex items-center gap-2">
-          <Dialog open={showAddMateria} onOpenChange={setShowAddMateria}>
+           <Dialog open={showAddMateria} onOpenChange={setShowAddMateria}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="bg-transparent">
                 <Book className="w-4 h-4 mr-2"/>
@@ -111,7 +138,7 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
                       key={materia.id}
                       variant="outline"
                       className="gap-2 p-2 cursor-pointer hover:border-destructive/50 group"
-                      onClick={() => setDeleteTarget({ type: 'materia', id: materia.id, name: materia.nombre })}
+                      onClick={() => setShowDeleteMateria(materia)}
                     >
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: materia.color }} />
                       {materia.nombre}
@@ -155,7 +182,7 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="w-4 h-4 mr-1" />
-                Nueva Clase
+                Clase
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -186,11 +213,11 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
                 </div>
                  <div className="space-y-2">
                   <Label htmlFor="dia_semana">Día</Label>
-                  <Select name="dia_semana" required defaultValue={selectedDayForModal.toString()}>
+                  <Select name="dia_semana" required defaultValue={(new Date().getDay()).toString()}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent>
-                      {DAYS_TO_SHOW.map((day, index) => (
-                        <SelectItem key={day} value={(index + 1).toString()}>{day}</SelectItem>
+                      {DAYS_TO_SHOW.map((_, index) => (
+                        <SelectItem key={index} value={(index + 1).toString()}>{DIAS_SEMANA[index + 1]}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -222,105 +249,155 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
         </div>
       </div>
       
-      <div className="border rounded-lg overflow-hidden bg-card">
-        <div className="overflow-x-auto">
-            <div 
-                className="grid min-w-[800px]"
-                style={{ 
-                gridTemplateColumns: '4rem repeat(6, 1fr)',
-                gridTemplateRows: `auto repeat(${totalRows}, 2.5rem)`
-                }}
-            >
-            {/* Corner */}
-            <div className="border-b border-r sticky top-0 left-0 bg-card z-20"></div>
-
-            {/* Day Headers */}
-            {DAYS_TO_SHOW.map((day, index) => (
-                <div key={day} className="text-center p-3 border-b border-r sticky top-0 bg-card z-10">
-                <p className="font-semibold text-foreground text-sm">{DIAS_SEMANA_CORTO[index + 1]}</p>
-                </div>
-            ))}
-
-            {/* Time Gutter and Grid Lines */}
+      <div className="flex-1 min-h-0 border-t border-border overflow-hidden">
+        <div 
+          className="grid h-full"
+          style={{ gridTemplateColumns: '4rem 1fr' }}
+        >
+          <div className="h-full border-r relative">
+            <div className="sticky top-0 bg-card z-20 h-16 border-b"></div>
             {Array.from({ length: END_HOUR - START_HOUR }).map((_, hourIndex) => {
-                const hour = START_HOUR + hourIndex;
-                return (
-                <React.Fragment key={hour}>
-                    <div 
-                    className="row-span-2 border-r relative text-right pr-2 sticky left-0 bg-card z-10"
-                    style={{ gridRow: hourIndex * 2 + 2 }}
-                    >
-                    <p className="absolute -top-2.5 right-2 text-xs text-muted-foreground">{`${hour}:00`}</p>
-                    </div>
-                    {DAYS_TO_SHOW.map((_, dayIndex) => (
-                    <div 
-                        key={`${hour}-${dayIndex}`}
-                        className="border-b border-r"
-                        style={{ 
-                        gridColumn: dayIndex + 2,
-                        gridRow: `${hourIndex * 2 + 2} / span 2`
-                        }}
-                    ></div>
-                    ))}
-                </React.Fragment>
-                )
-            })}
-
-            {/* Events */}
-            {horarios.map(horario => {
-                if (horario.dia_semana < 1 || horario.dia_semana > 6) return null;
-                
-                const start = timeToMinutes(horario.hora_inicio);
-                const end = timeToMinutes(horario.hora_fin);
-
-                const gridRowStart = (start - (START_HOUR * 60)) / 30 + 2;
-                const gridRowEnd = (end - (START_HOUR * 60)) / 30 + 2;
-
-                if (gridRowStart < 2 || gridRowEnd > totalRows + 2) return null;
-
-                return (
-                <div
-                    key={horario.id}
-                    className="relative flex flex-col p-2 rounded-lg m-px overflow-hidden group shadow-sm"
-                    style={{
-                    gridColumn: horario.dia_semana + 1,
-                    gridRow: `${Math.floor(gridRowStart)} / ${Math.floor(gridRowEnd)}`,
-                    backgroundColor: `${horario.materia?.color}20`,
-                    border: `1px solid ${horario.materia?.color}80`
-                    }}
-                >
-                    <p className="font-semibold text-sm" style={{ color: horario.materia?.color }}>{horario.materia?.nombre}</p>
-                    <p className="text-xs text-muted-foreground">{`${horario.hora_inicio.slice(0,5)} - ${horario.hora_fin.slice(0,5)}`}</p>
-                    {horario.aula && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3"/>{horario.aula}</p>}
-                    
-                    <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-0.5 right-0.5 h-6 w-6 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setDeleteTarget({ type: 'horario', id: horario.id, name: horario.materia?.nombre || 'esta clase' })}
-                    >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+              const hour = START_HOUR + hourIndex;
+              return (
+                <div key={hour} className="relative h-24 text-right pr-2">
+                  <p className="absolute -top-2.5 right-2 text-xs text-muted-foreground">{`${hour}:00`}</p>
                 </div>
-                )
+              )
             })}
+          </div>
+
+          <div className="overflow-x-auto">
+            <div 
+              className="grid min-w-[750px]"
+              style={{ 
+                gridTemplateColumns: 'repeat(6, 1fr)',
+              }}
+            >
+              {/* Day Headers */}
+              <div className="col-span-6 grid grid-cols-6 sticky top-0 bg-card z-20 border-b">
+                {weekDays.map((day) => {
+                  const isToday = day.getTime() === today.getTime()
+                  return (
+                    <div key={day.toISOString()} className="text-center p-3 border-r last:border-r-0">
+                      <p className="font-medium text-muted-foreground text-sm">{DIAS_SEMANA_CORTO[day.getDay()]}</p>
+                      <p className={cn("text-2xl font-bold", isToday ? "text-primary" : "text-foreground")}>
+                        {day.getDate()}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div 
+                className="col-span-6 grid relative"
+                style={{
+                  gridTemplateColumns: 'repeat(6, 1fr)',
+                  gridTemplateRows: `repeat(${totalRows}, 2rem)`
+                }}
+              >
+                {/* Grid Lines */}
+                {Array.from({ length: 6 * totalRows }).map((_, i) => (
+                  <div key={i} className="border-b border-r border-border/50"></div>
+                ))}
+                
+                {/* Events */}
+                {horarios.map(horario => {
+                  if (!horario.hora_inicio || !horario.hora_fin || horario.dia_semana < 1 || horario.dia_semana > 6) return null;
+                  
+                  const start = timeToMinutes(horario.hora_inicio);
+                  const end = timeToMinutes(horario.hora_fin);
+
+                  const gridRowStart = (start - (START_HOUR * 60)) / 30 + 1;
+                  const gridRowEnd = (end - (START_HOUR * 60)) / 30 + 1;
+
+                  if (gridRowStart < 1 || gridRowEnd > totalRows + 1) return null;
+
+                  return (
+                    <div
+                      key={horario.id}
+                      onClick={() => setSelectedHorario(horario)}
+                      className="relative flex flex-col p-2 rounded-lg m-px overflow-hidden group shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all duration-200"
+                      style={{
+                        gridColumn: horario.dia_semana,
+                        gridRow: `${Math.floor(gridRowStart)} / ${Math.floor(gridRowEnd)}`,
+                        backgroundColor: `${horario.materia?.color}20`,
+                        borderLeft: `3px solid ${horario.materia?.color}`,
+                      }}
+                    >
+                      <p className="font-semibold text-sm" style={{ color: horario.materia?.color }}>{horario.materia?.nombre}</p>
+                      <p className="text-xs text-muted-foreground">{`${horario.hora_inicio.slice(0,5)} - ${horario.hora_fin.slice(0,5)}`}</p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
+          </div>
         </div>
       </div>
       
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+      {/* Class Detail Dialog */}
+      <Dialog open={!!selectedHorario} onOpenChange={() => setSelectedHorario(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalles de la Clase</DialogTitle>
+          </DialogHeader>
+          {selectedHorario && (
+            <div className="py-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-10 rounded-full" style={{backgroundColor: selectedHorario.materia?.color}}></div>
+                <div>
+                  <h3 className="text-xl font-semibold">{selectedHorario.materia?.nombre}</h3>
+                  <p className="text-muted-foreground">{DIAS_SEMANA[selectedHorario.dia_semana]}</p>
+                </div>
+              </div>
+              <div className="space-y-3 text-sm">
+                <p className="flex items-center gap-3"><Clock className="w-4 h-4 text-muted-foreground"/> {selectedHorario.hora_inicio.slice(0,5)} - {selectedHorario.hora_fin.slice(0,5)}</p>
+                {selectedHorario.aula && <p className="flex items-center gap-3"><MapPin className="w-4 h-4 text-muted-foreground"/> {selectedHorario.aula}</p>}
+                {selectedHorario.docente && <p className="flex items-center gap-3"><User className="w-4 h-4 text-muted-foreground"/> {selectedHorario.docente}</p>}
+              </div>
+              <Button
+                variant="outline"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setShowDeleteHorario(selectedHorario)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Eliminar Clase
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Horario Confirmation */}
+      <AlertDialog open={!!showDeleteHorario} onOpenChange={() => setShowDeleteHorario(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar {deleteTarget?.type === 'horario' ? 'clase' : 'materia'}</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar clase</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de eliminar "{deleteTarget?.name}"? 
-              {deleteTarget?.type === 'materia' && ' Esto también eliminará todas las clases y tareas asociadas.'}
+              ¿Estás seguro de eliminar "{showDeleteHorario?.materia?.nombre}"? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={loading}>
+            <AlertDialogAction onClick={handleDeleteHorario} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={loading}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+       {/* Delete Materia Confirmation */}
+       <AlertDialog open={!!showDeleteMateria} onOpenChange={() => setShowDeleteMateria(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar materia</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar "{showDeleteMateria?.nombre}"? Esto también eliminará todas las clases y tareas asociadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMateria} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={loading}>
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
