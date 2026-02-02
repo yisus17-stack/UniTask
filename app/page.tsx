@@ -40,65 +40,53 @@ export default function SplashPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-background overflow-hidden">
+    <main className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       {/* Hero Section */}
-      <section className="w-full flex-1 flex items-center">
-        <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center px-6 py-16 md:py-24">
-          {/* Left Column: Text Content */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-left animate-in fade-in slide-in-from-bottom-12 duration-500">
-            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-6 shadow-2xl shadow-primary/20">
-              <BookOpen className="w-8 h-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
-              Organiza tu éxito académico con Unitask
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-lg mb-8">
-              Tu asistente personal para dominar horarios, tareas y recordatorios. Simplifica tu vida estudiantil y alcanza tus metas.
-            </p>
-            <div className="w-full max-w-sm md:max-w-none flex flex-col sm:flex-row gap-3">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto h-12 text-base font-semibold"
-                onClick={() => router.push('/auth/register')}
-              >
-                Empezar Gratis
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="lg"
-                className="w-full sm:w-auto h-12 text-base font-medium"
-                onClick={() => router.push('/auth/login')}
-              >
-                Iniciar Sesión
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 mt-6 text-sm text-muted-foreground">
-              <div className="flex">
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-              </div>
-              <span>Amado por miles de estudiantes.</span>
-            </div>
+      <section className="w-full flex-1 flex flex-col items-center justify-center text-center px-4 py-20 md:py-28 overflow-hidden">
+        <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-500">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-primary flex items-center justify-center mb-6 shadow-2xl shadow-primary/20">
+            <BookOpen className="w-8 h-8 text-primary-foreground" />
           </div>
-          {/* Right Column: Image */}
-          <div className="relative animate-in fade-in slide-in-from-bottom-12 duration-500 delay-100 hidden md:block">
-            <div className="bg-muted/50 p-3 rounded-2xl shadow-2xl shadow-primary/10 ring-1 ring-border/20">
-              {heroImage && (
-                <Image
-                  src={heroImage.imageUrl}
-                  alt={heroImage.description}
-                  width={1200}
-                  height={900}
-                  className="rounded-lg shadow-md"
-                  data-ai-hint={heroImage.imageHint}
-                  priority
-                />
-              )}
-            </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground mb-4 leading-tight">
+            La forma inteligente de organizar tu vida universitaria
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            Unitask es tu asistente académico todo en uno. Gestiona horarios, tareas, recordatorios y más, todo en un solo lugar.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              size="lg"
+              className="h-12 text-base font-semibold"
+              onClick={() => router.push('/auth/register')}
+            >
+              Empezar Gratis
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              className="h-12 text-base font-medium"
+              onClick={() => router.push('/auth/login')}
+            >
+              Iniciar Sesión
+            </Button>
+          </div>
+        </div>
+        <div className="relative mt-16 w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-12 duration-500 delay-100">
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-primary/10 rounded-full -z-10 blur-2xl"></div>
+          <div className="absolute -top-8 -right-8 w-32 h-32 bg-accent/10 rounded-full -z-10 blur-2xl"></div>
+          <div className="bg-card p-3 rounded-2xl shadow-2xl shadow-primary/10 ring-1 ring-border/20">
+            {heroImage && (
+              <Image
+                src={heroImage.imageUrl}
+                alt={heroImage.description}
+                width={1600}
+                height={900}
+                className="rounded-lg shadow-md aspect-[16/9] object-cover object-top"
+                data-ai-hint={heroImage.imageHint}
+                priority
+              />
+            )}
           </div>
         </div>
       </section>

@@ -3,7 +3,7 @@
     {
       "id": "hero-dashboard",
       "description": "A mockup of the Unitask application dashboard view.",
-      "imageUrl": "https://images.unsplash.com/photo-1732194516739-9325055c35de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxhcHAlMjBkYXNoYm9hcmR8ZW58MHx8fHwxNzY5ODc2OTk2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcHAlMjBkYXNoYm9hcmR8ZW58MHx8fHwxNzcwMDMwOTM3fDA&ixlib=rb-4.1.0&q=80&w=1600",
       "imageHint": "app dashboard"
     }
   ]
