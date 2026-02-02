@@ -1,85 +1,49 @@
-const CACHE_NAME = 'org-academico-v1';
-const urlsToCache = [
-  '/',
-  '/dashboard',
-  '/dashboard/horario',
-  '/dashboard/tareas',
-  '/dashboard/recordatorios',
-  '/dashboard/perfil',
-];
+// This is a custom service worker to handle push notifications.
+// next-pwa will automatically inject its precaching logic into this file.
 
-// Install event - cache assets
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .catch((err) => {
-        console.log('Cache install failed:', err);
-      })
-  );
-  self.skipWaiting();
-});
-
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// Fetch event - network first, fallback to cache
-self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
-  
-  // Skip API calls and auth routes - always go to network
-  if (event.request.url.includes('/api/') || 
-      event.request.url.includes('/auth/') ||
-      event.request.url.includes('supabase')) {
-    return;
+self.addEventListener('push', (event) => {
+  try {
+    const data = event.data.json();
+    const title = data.title || 'Unitask';
+    const options = {
+      body: data.message,
+      icon: '/icons/icon-192x192.jpg',
+      badge: '/icons/icon-192x192.jpg',
+      vibrate: [100, 50, 100],
+      data: {
+        url: data.url || '/dashboard', // URL to open on click
+      },
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (error) {
+    console.error('Error handling push event:', error);
+    const options = {
+      body: 'Has recibido una nueva notificación.',
+      icon: '/icons/icon-192x192.jpg',
+      badge: '/icons/icon-192x192.jpg',
+    };
+    event.waitUntil(self.registration.showNotification('Unitask', options));
   }
+});
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Clone the response
-        const responseClone = response.clone();
-        
-        // Cache successful responses
-        if (response.status === 200) {
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseClone);
-            });
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a window is already open, focus it.
+      for (const client of clientList) {
+        // A bit of a hack to check for the correct path
+        const clientPath = new URL(client.url).pathname;
+        const urlPath = new URL(urlToOpen, self.location.origin).pathname;
+        if (clientPath === urlPath && 'focus' in client) {
+          return client.focus();
         }
-        
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cache if network fails
-        return caches.match(event.request)
-          .then((response) => {
-            if (response) {
-              return response;
-            }
-            // Return offline page for navigation requests
-            if (event.request.mode === 'navigate') {
-              return caches.match('/');
-            }
-          });
-      })
+      }
+      // Otherwise, open a new window.
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
   );
 });

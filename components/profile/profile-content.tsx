@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, Mail, GraduationCap, BookOpen, Bell, LogOut, Save, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,9 +19,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import type { Profile } from '@/lib/types'
-import { updateProfile } from '@/app/actions/data'
+import { updateProfile, setPushSubscription } from '@/app/actions/data'
 import { signOut } from '@/app/actions/auth'
 import { toast } from 'sonner'
+import { urlBase64ToUint8Array } from '@/lib/utils'
 
 interface ProfileContentProps {
   profile: Profile | null
@@ -30,26 +31,37 @@ interface ProfileContentProps {
 
 export function ProfileContent({ profile, email }: ProfileContentProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  
   const [formData, setFormData] = useState({
     nombre: profile?.nombre || '',
     carrera: profile?.carrera || '',
     semestre: profile?.semestre?.toString() || '',
-    notificaciones_activas: profile?.notificaciones_activas ?? true,
   })
 
+  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(profile?.notificaciones_activas || false)
+  const [isNotificationSwitchPending, startNotificationTransition] = useTransition()
+  const [isPwaCapable, setIsPwaCapable] = useState(false)
+
+  useEffect(() => {
+    setIsPwaCapable('serviceWorker' in navigator && 'PushManager' in window)
+    if (Notification.permission === 'granted') {
+      setIsNotificationsEnabled(profile?.notificaciones_activas || false)
+    } else {
+      setIsNotificationsEnabled(false)
+    }
+  }, [profile?.notificaciones_activas])
+
   const handleSave = async () => {
-    setLoading(true)
-    
+    setIsSaving(true)
     const data = new FormData()
     data.set('nombre', formData.nombre)
     data.set('carrera', formData.carrera)
     data.set('semestre', formData.semestre)
-    data.set('notificaciones_activas', formData.notificaciones_activas.toString())
 
     const result = await updateProfile(data)
-    setLoading(false)
+    setIsSaving(false)
 
     if (result.error) {
       toast.error(result.error)
@@ -57,6 +69,56 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
       toast.success('Perfil actualizado')
     }
   }
+
+  const handleNotificationToggle = async (checked: boolean) => {
+    startNotificationTransition(async () => {
+      if (Notification.permission === 'denied') {
+        toast.error('Las notificaciones están bloqueadas. Habilítalas en la configuración de tu navegador.');
+        return;
+      }
+      
+      if (checked) {
+        // SUBSCRIBE
+        try {
+          const swRegistration = await navigator.serviceWorker.ready;
+          const subscription = await swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
+          });
+          
+          const result = await setPushSubscription(subscription);
+          if (result.error) throw new Error(result.error);
+          
+          toast.success('Notificaciones activadas');
+          setIsNotificationsEnabled(true)
+        } catch (error) {
+          console.error(error);
+          toast.error('No se pudieron activar las notificaciones.', {
+            description: (error as Error).message,
+          });
+        }
+      } else {
+        // UNSUBSCRIBE
+        try {
+          const swRegistration = await navigator.serviceWorker.ready;
+          const subscription = await swRegistration.pushManager.getSubscription();
+          if (subscription) {
+            await subscription.unsubscribe();
+          }
+          const result = await setPushSubscription(null);
+          if (result.error) throw new Error(result.error);
+
+          toast.success('Notificaciones desactivadas');
+          setIsNotificationsEnabled(false)
+        } catch (error) {
+          console.error(error);
+          toast.error('No se pudieron desactivar las notificaciones.', {
+            description: (error as Error).message,
+          });
+        }
+      }
+    });
+  };
 
   const handleLogout = async () => {
     await signOut()
@@ -156,14 +218,16 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Bell className="w-5 h-5" /> Notificaciones</h2>
           <div className="bg-muted/50 rounded-lg p-4 flex items-center justify-between">
             <div>
-              <p className="font-medium text-foreground">Activar notificaciones</p>
+              <p className="font-medium text-foreground">Activar notificaciones push</p>
               <p className="text-sm text-muted-foreground">Recibe alertas de tareas y recordatorios</p>
             </div>
             <Switch
-              checked={formData.notificaciones_activas}
-              onCheckedChange={(checked) => setFormData({ ...formData, notificaciones_activas: checked })}
+              checked={isNotificationsEnabled}
+              onCheckedChange={handleNotificationToggle}
+              disabled={isNotificationSwitchPending || !isPwaCapable}
             />
           </div>
+           {!isPwaCapable && <p className="text-xs text-muted-foreground mt-2">Tu navegador no es compatible con notificaciones push o la app no se está ejecutando en modo seguro (HTTPS).</p>}
         </section>
       </div>
 
@@ -172,9 +236,9 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
         <Button 
           onClick={handleSave} 
           className="w-full h-12"
-          disabled={loading}
+          disabled={isSaving}
         >
-          {loading ? (
+          {isSaving ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Guardando...

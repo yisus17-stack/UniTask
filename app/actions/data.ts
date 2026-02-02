@@ -28,7 +28,6 @@ export async function updateProfile(formData: FormData) {
   const nombre = formData.get('nombre') as string
   const carrera = formData.get('carrera') as string
   const semestre = parseInt(formData.get('semestre') as string) || null
-  const notificaciones_activas = formData.get('notificaciones_activas') === 'true'
 
   const { error } = await supabase
     .from('profiles')
@@ -36,7 +35,26 @@ export async function updateProfile(formData: FormData) {
       nombre,
       carrera,
       semestre,
-      notificaciones_activas,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+  
+  revalidatePath('/dashboard/perfil')
+  return { success: true }
+}
+
+export async function setPushSubscription(subscription: object | null) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      push_subscription: subscription,
+      notificaciones_activas: !!subscription,
       updated_at: new Date().toISOString(),
     })
     .eq('id', user.id)

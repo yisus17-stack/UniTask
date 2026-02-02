@@ -7,6 +7,7 @@ export interface Profile {
   notificaciones_activas: boolean
   created_at: string
   updated_at: string
+  push_subscription: object | null
 }
 
 export interface Materia {
