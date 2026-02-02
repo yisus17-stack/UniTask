@@ -3,7 +3,6 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
-import { PWARegister } from '@/components/pwa-register'
 import './globals.css'
 
 const inter = Inter({ 
@@ -51,7 +50,6 @@ export default function RootLayout({
       <body className="font-sans antialiased min-h-screen">
         {children}
         <Toaster position="top-center" richColors />
-        <PWARegister />
         <Analytics />
       </body>
     </html>
