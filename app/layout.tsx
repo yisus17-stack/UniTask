@@ -1,6 +1,6 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
-import { Inter, Geist_Mono } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from '@/components/ui/sonner'
 import { PWARegister } from '@/components/pwa-register'
@@ -9,11 +9,6 @@ import './globals.css'
 const inter = Inter({ 
   subsets: ["latin"],
   variable: '--font-sans'
-});
-
-const geistMono = Geist_Mono({ 
-  subsets: ["latin"],
-  variable: '--font-mono'
 });
 
 export const metadata: Metadata = {
@@ -52,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`${inter.variable} ${geistMono.variable}`}>
+    <html lang="es" className={`${inter.variable}`}>
       <body className="font-sans antialiased min-h-screen">
         {children}
         <Toaster position="top-center" richColors />
