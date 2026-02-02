@@ -101,7 +101,7 @@ export function TasksContent({ tareas, materias }: TasksContentProps) {
   const completedCount = tareas.filter(t => t.completada).length
 
   return (
-    <main className="px-4 py-6 max-w-lg mx-auto">
+    <main className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

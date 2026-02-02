@@ -96,7 +96,7 @@ export function RemindersContent({ recordatorios }: RemindersContentProps) {
   }
 
   return (
-    <main className="px-4 py-6 max-w-lg mx-auto">
+    <main className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

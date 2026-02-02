@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-t border-border">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-sm border-t border-border">
       <div className="max-w-lg mx-auto px-2">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
@@ -46,7 +46,7 @@ export function BottomNav() {
         </div>
       </div>
       {/* Safe area for iOS */}
-      <div className="h-safe-area-inset-bottom bg-background/80" />
+      <div className="h-safe-area-inset-bottom bg-card/80" />
     </nav>
   )
 }

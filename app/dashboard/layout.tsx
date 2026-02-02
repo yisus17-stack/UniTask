@@ -16,8 +16,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {children}
+    <div className="max-w-lg mx-auto bg-card min-h-screen border-x">
+      <div className="pb-20">
+        {children}
+      </div>
       <BottomNav />
     </div>
   )

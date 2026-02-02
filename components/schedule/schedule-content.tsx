@@ -85,7 +85,7 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
   const totalRows = (END_HOUR - START_HOUR) * 2;
 
   return (
-    <main className="px-4 py-6 max-w-7xl mx-auto">
+    <main className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -97,7 +97,7 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="bg-transparent">
                 <Book className="w-4 h-4 mr-2"/>
-                Gestionar Materias
+                Materias
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -222,87 +222,89 @@ export function ScheduleContent({ horarios, materias }: ScheduleContentProps) {
         </div>
       </div>
       
-      <div className="border rounded-lg overflow-auto bg-card">
-        <div 
-            className="grid"
-            style={{ 
-              gridTemplateColumns: '4rem repeat(6, 1fr)',
-              gridTemplateRows: `auto repeat(${totalRows}, 2.5rem)`
-            }}
-          >
-          {/* Corner */}
-          <div className="border-b border-r sticky top-0 bg-card z-20"></div>
-
-          {/* Day Headers */}
-          {DAYS_TO_SHOW.map((day, index) => (
-            <div key={day} className="text-center p-3 border-b border-r sticky top-0 bg-card z-10">
-              <p className="font-semibold text-foreground">{DIAS_SEMANA_CORTO[index + 1]}</p>
-            </div>
-          ))}
-
-          {/* Time Gutter and Grid Lines */}
-          {Array.from({ length: END_HOUR - START_HOUR }).map((_, hourIndex) => {
-            const hour = START_HOUR + hourIndex;
-            return (
-              <React.Fragment key={hour}>
-                <div 
-                  className="row-span-2 border-r relative"
-                  style={{ gridRow: hourIndex * 2 + 2 }}
-                >
-                  <p className="absolute -top-2.5 right-2 text-xs text-muted-foreground">{`${hour}:00`}</p>
-                </div>
-                {DAYS_TO_SHOW.map((_, dayIndex) => (
-                  <div 
-                    key={`${hour}-${dayIndex}`}
-                    className="border-b border-r"
-                    style={{ 
-                      gridColumn: dayIndex + 2,
-                      gridRow: `${hourIndex * 2 + 2} / span 2`
-                    }}
-                  ></div>
-                ))}
-              </React.Fragment>
-            )
-          })}
-
-          {/* Events */}
-          {horarios.map(horario => {
-            if (horario.dia_semana < 1 || horario.dia_semana > 6) return null;
-            
-            const start = timeToMinutes(horario.hora_inicio);
-            const end = timeToMinutes(horario.hora_fin);
-
-            const gridRowStart = (start - (START_HOUR * 60)) / 30 + 2;
-            const gridRowEnd = (end - (START_HOUR * 60)) / 30 + 2;
-
-            if (gridRowStart < 2 || gridRowEnd > totalRows + 2) return null;
-
-            return (
-              <div
-                key={horario.id}
-                className="relative flex flex-col p-2 rounded-lg m-px overflow-hidden group shadow-sm"
-                style={{
-                  gridColumn: horario.dia_semana + 1,
-                  gridRow: `${Math.floor(gridRowStart)} / ${Math.floor(gridRowEnd)}`,
-                  backgroundColor: `${horario.materia?.color}20`,
-                  border: `1px solid ${horario.materia?.color}80`
+      <div className="border rounded-lg overflow-hidden bg-card">
+        <div className="overflow-x-auto">
+            <div 
+                className="grid min-w-[800px]"
+                style={{ 
+                gridTemplateColumns: '4rem repeat(6, 1fr)',
+                gridTemplateRows: `auto repeat(${totalRows}, 2.5rem)`
                 }}
-              >
-                <p className="font-semibold text-sm" style={{ color: horario.materia?.color }}>{horario.materia?.nombre}</p>
-                <p className="text-xs text-muted-foreground">{`${horario.hora_inicio.slice(0,5)} - ${horario.hora_fin.slice(0,5)}`}</p>
-                {horario.aula && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3"/>{horario.aula}</p>}
+            >
+            {/* Corner */}
+            <div className="border-b border-r sticky top-0 left-0 bg-card z-20"></div>
+
+            {/* Day Headers */}
+            {DAYS_TO_SHOW.map((day, index) => (
+                <div key={day} className="text-center p-3 border-b border-r sticky top-0 bg-card z-10">
+                <p className="font-semibold text-foreground text-sm">{DIAS_SEMANA_CORTO[index + 1]}</p>
+                </div>
+            ))}
+
+            {/* Time Gutter and Grid Lines */}
+            {Array.from({ length: END_HOUR - START_HOUR }).map((_, hourIndex) => {
+                const hour = START_HOUR + hourIndex;
+                return (
+                <React.Fragment key={hour}>
+                    <div 
+                    className="row-span-2 border-r relative text-right pr-2 sticky left-0 bg-card z-10"
+                    style={{ gridRow: hourIndex * 2 + 2 }}
+                    >
+                    <p className="absolute -top-2.5 right-2 text-xs text-muted-foreground">{`${hour}:00`}</p>
+                    </div>
+                    {DAYS_TO_SHOW.map((_, dayIndex) => (
+                    <div 
+                        key={`${hour}-${dayIndex}`}
+                        className="border-b border-r"
+                        style={{ 
+                        gridColumn: dayIndex + 2,
+                        gridRow: `${hourIndex * 2 + 2} / span 2`
+                        }}
+                    ></div>
+                    ))}
+                </React.Fragment>
+                )
+            })}
+
+            {/* Events */}
+            {horarios.map(horario => {
+                if (horario.dia_semana < 1 || horario.dia_semana > 6) return null;
                 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-0.5 right-0.5 h-6 w-6 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => setDeleteTarget({ type: 'horario', id: horario.id, name: horario.materia?.nombre || 'esta clase' })}
+                const start = timeToMinutes(horario.hora_inicio);
+                const end = timeToMinutes(horario.hora_fin);
+
+                const gridRowStart = (start - (START_HOUR * 60)) / 30 + 2;
+                const gridRowEnd = (end - (START_HOUR * 60)) / 30 + 2;
+
+                if (gridRowStart < 2 || gridRowEnd > totalRows + 2) return null;
+
+                return (
+                <div
+                    key={horario.id}
+                    className="relative flex flex-col p-2 rounded-lg m-px overflow-hidden group shadow-sm"
+                    style={{
+                    gridColumn: horario.dia_semana + 1,
+                    gridRow: `${Math.floor(gridRowStart)} / ${Math.floor(gridRowEnd)}`,
+                    backgroundColor: `${horario.materia?.color}20`,
+                    border: `1px solid ${horario.materia?.color}80`
+                    }}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            )
-          })}
+                    <p className="font-semibold text-sm" style={{ color: horario.materia?.color }}>{horario.materia?.nombre}</p>
+                    <p className="text-xs text-muted-foreground">{`${horario.hora_inicio.slice(0,5)} - ${horario.hora_fin.slice(0,5)}`}</p>
+                    {horario.aula && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3"/>{horario.aula}</p>}
+                    
+                    <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-0.5 right-0.5 h-6 w-6 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setDeleteTarget({ type: 'horario', id: horario.id, name: horario.materia?.nombre || 'esta clase' })}
+                    >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                </div>
+                )
+            })}
+            </div>
         </div>
       </div>
       

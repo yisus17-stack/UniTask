@@ -30,7 +30,7 @@ export function DashboardContent({
   const dayName = DIAS_SEMANA[today.getDay()]
 
   return (
-    <main className="px-4 py-6 max-w-lg mx-auto">
+    <main className="px-4 py-6">
       {/* Header */}
       <div className="mb-8">
         <p className="text-muted-foreground text-sm">{dayName}, {today.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</p>

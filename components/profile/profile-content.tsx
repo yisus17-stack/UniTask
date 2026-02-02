@@ -63,7 +63,7 @@ export function ProfileContent({ profile, email }: ProfileContentProps) {
   }
 
   return (
-    <main className="px-4 py-6 max-w-lg mx-auto">
+    <main className="px-4 py-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground tracking-tight">Perfil</h1>
