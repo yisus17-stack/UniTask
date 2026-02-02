@@ -10,7 +10,7 @@ export function formatDistanceToNow(date: Date): string {
     return 'Hoy'
   }
   if (diffDays === 1) {
-    return 'Manana'
+    return 'Mañana'
   }
   if (diffDays <= 7) {
     return `En ${diffDays} dias`

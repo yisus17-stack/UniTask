@@ -31,6 +31,7 @@ import type { Recordatorio } from '@/lib/types'
 import { createRecordatorio, toggleRecordatorio, deleteRecordatorio } from '@/app/actions/data'
 import { formatDateTime } from '@/lib/date-utils'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface RemindersContentProps {
   recordatorios: Recordatorio[]
